@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
 )
 
-func CreateTransaction(source, destination string) {
+//SendPayment makes a transaction between source to destination
+func SendPayment(source, destination string) {
 	//source := "SCZANGBA5YHTNYVVV4C3U252E2B6P6F5T3U6MM63WBSBZATAQI3EBTQ4"
 	//destination := "GA2C5RFPE6GCKMY3US5PAB6UZLKIGSPIUKSLRB6Q723BM2OARMDUYEJ5"
 
@@ -53,4 +55,30 @@ func CreateTransaction(source, destination string) {
 	fmt.Println("Successful Transaction:")
 	fmt.Println("Ledger:", resp.Ledger)
 	fmt.Println("Hash:", resp.Hash)
+}
+
+//ReceivePayment checks the payment
+func ReceivePayment(address string) {
+	ctx := context.Background()
+
+	cursor := horizon.Cursor("now")
+
+	fmt.Println("Waiting for a payment...")
+
+	err := horizon.DefaultTestNetClient.StreamPayments(ctx, address, &cursor, func(payment horizon.Payment) {
+		fmt.Println("Payment type:", payment.Type)
+		fmt.Println("Payment Paging Token:", payment.PagingToken)
+		fmt.Println("Payment From:", payment.From)
+		fmt.Println("Payment To:", payment.To)
+		fmt.Println("Payment Asset Type:", payment.AssetType)
+		fmt.Println("Payment Asset Code:", payment.AssetCode)
+		fmt.Println("Payment Asset Issuer:", payment.AssetIssuer)
+		fmt.Println("Payment Amount:", payment.Amount)
+		fmt.Println("Payment Memo Type:", payment.Memo.Type)
+		fmt.Println("Payment Memo:", payment.Memo.Value)
+	})
+
+	if err != nil {
+		panic(err)
+	}
 }
